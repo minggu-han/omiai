@@ -1,0 +1,10 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pip install *)",
+      "Bash(python -c \"from src.state import OverallState; from src.graph import build_graph; g = build_graph\\(\\); print\\('OK:', type\\(g\\).__name__\\)\")",
+      "Bash(python test_flow.py)",
+      "Bash(python -c \"from main import app, _graph; print\\('FastAPI app:', app.title\\); print\\('Graph:', type\\(_graph\\).__name__\\); print\\('Routes:'\\); [print\\(f'  {r.methods} {r.path}'\\) for r in app.routes if hasattr\\(r, 'methods'\\)]\")"
+    ]
+  }
+}
