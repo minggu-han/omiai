@@ -44,6 +44,30 @@ export const useSessionStore = defineStore('session', () => {
     }
   }
 
+  /** 获取存档列表 */
+  async function fetchSessions() {
+    try {
+      const data = await api.fetchSessions()
+      return data.sessions || []
+    } catch (e) {
+      error.value = e.message
+      return []
+    }
+  }
+
+  /** 删除存档 */
+  async function removeSession(sid) {
+    try {
+      await api.deleteSession(sid)
+      if (sessionId.value === sid) {
+        resetState()
+        step.value = 'input'
+      }
+    } catch (e) {
+      error.value = e.message
+    }
+  }
+
   /** 提交聊天记录开始分析 */
   async function startAnalyze() {
     if (!sessionId.value) {
@@ -136,6 +160,17 @@ export const useSessionStore = defineStore('session', () => {
   // ---- 内部辅助 ----
 
   function applyState(state) {
+    // 恢复聊天记录
+    if (state.chat_history && state.chat_history.length > 0) {
+      chatHistory.value = state.chat_history.map(m => ({
+        speaker: m.speaker,
+        content: m.content,
+      }))
+    }
+    // 恢复用户设定
+    if (state.user_persona) userPersona.value = state.user_persona
+    if (state.user_goal) userGoal.value = state.user_goal
+    // 恢复分析结果
     if (state.analysis_report) analysisReport.value = state.analysis_report
     if (state.candidates) candidates.value = state.candidates
     if (state.final_reply) finalReply.value = state.final_reply
@@ -159,5 +194,6 @@ export const useSessionStore = defineStore('session', () => {
     analysisReport, candidates, finalReply, simulation, retryCount,
     isInterrupted,
     newSession, startAnalyze, submitReview, restoreSession,
+    fetchSessions, removeSession, resetState,
   }
 })

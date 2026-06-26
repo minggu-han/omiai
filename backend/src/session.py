@@ -49,9 +49,11 @@ def create_initial_state(
         对方：xxx
         我：xxx
     """
+    print(f'chat_history_text: {chat_history_text}')
     messages = []
     for line in chat_history_text.strip().split("\n"):
         line = line.strip()
+        print(f'line: {line}')
         if not line:
             continue
         if line.startswith("对方："):
@@ -62,6 +64,13 @@ def create_initial_state(
             # 兜底：无法判断发送方时默认视为"对方"
             _, content = line.split("：", 1)
             messages.append({"speaker": "other", "content": content.strip()})
+
+    for msg in messages:
+        print('*' * 20)
+        print(msg)
+        print(f'speaker: {msg["speaker"]}')
+        print(f'msg: {msg["content"]}')
+        print('*' * 20)
 
     return OverallState(
         chat_history=messages,

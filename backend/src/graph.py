@@ -8,8 +8,11 @@
                                                        重试次数>=3? → END（强制退出）
 """
 
+from typing import Optional
+
 from langgraph.graph import StateGraph, START, END
 from langgraph.checkpoint.memory import MemorySaver
+from langgraph.checkpoint.base import BaseCheckpointSaver
 
 from src.state import OverallState
 from src.nodes.analyzer import analyzer_node
@@ -65,12 +68,20 @@ def route_after_review(state: OverallState) -> str:
 # 图构建器
 # ---------------------------------------------------------------------------
 
-def build_graph() -> StateGraph:
+def build_graph(checkpointer: Optional[BaseCheckpointSaver] = None):
     """构建并编译 AI 约会助攻顾问的 StateGraph。
 
-    返回一个已编译的图，配置了 MemorySaver checkpointer
-    和 interrupt_before=["human_review"] 中断点。
+    参数
+    ----------
+    checkpointer : BaseCheckpointSaver, optional
+        LangGraph 检查点保存器。传入 None 时使用内存级 MemorySaver。
+        生产环境传入 AsyncPostgresSaver 实现 PostgreSQL 持久化。
+
+    返回一个已编译的图，配置了 interrupt_before=["human_review"] 中断点。
     """
+    if checkpointer is None:
+        checkpointer = MemorySaver()
+
     graph = StateGraph(OverallState)
 
     # --- 添加节点 ---
@@ -102,7 +113,6 @@ def build_graph() -> StateGraph:
     graph.add_edge("simulator", END)
 
     # --- 编译并配置中断 ---
-    checkpointer = MemorySaver()
     return graph.compile(
         checkpointer=checkpointer,
         interrupt_before=["human_review"],

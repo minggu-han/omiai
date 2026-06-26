@@ -22,15 +22,21 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, watch } from 'vue'
 
 const props = defineProps({
   disabled: { type: Boolean, default: false },
+  initialText: { type: String, default: '' },
 })
 
 defineEmits(['submit'])
 
-const text = ref('')
+const text = ref(props.initialText || '')
+
+// 当 initialText 变化时（如恢复会话），同步到 textarea
+watch(() => props.initialText, (val) => {
+  if (val) text.value = val
+})
 
 /** 将文本解析为聊天消息数组 */
 const parsedMessages = computed(() => {

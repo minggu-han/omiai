@@ -1,31 +1,33 @@
 <!-- AI 约会助攻顾问 —— 主应用组件 -->
 <template>
-  <div class="app-layout">
-    <!-- ============================================================ -->
+  <!-- ============================================================ -->
+  <!-- 未登录 → 登录/注册页 -->
+  <!-- ============================================================ -->
+  <LoginForm v-if="!auth.isLoggedIn" @loggedIn="onLoggedIn" />
+
+  <!-- ============================================================ -->
+  <!-- 已登录 → 主界面 -->
+  <!-- ============================================================ -->
+  <div v-else class="app-layout">
     <!-- 侧边栏 -->
-    <!-- ============================================================ -->
     <aside class="sidebar">
       <div class="sidebar-header">
         <h1>💘 AI 约会助攻顾问</h1>
         <p class="tagline">基于 LangGraph 多智能体协作系统</p>
       </div>
 
-      <!-- API Key -->
+      <!-- 用户信息 -->
       <section class="sidebar-section">
-        <h3>⚙️ 配置</h3>
-        <label>OpenAI API Key</label>
-        <input
-          v-model="apiKey"
-          type="password"
-          placeholder="sk-..."
-          @change="onApiKeyChange"
-        />
-        <span class="help">输入后仅当前会话有效，不会存储</span>
+        <h3>👤 当前用户</h3>
+        <div class="user-row">
+          <span>{{ auth.username }}</span>
+          <button class="btn-logout" @click="onLogout">退出</button>
+        </div>
       </section>
 
       <!-- 用户设定 -->
       <section class="sidebar-section">
-        <h3>👤 用户设定</h3>
+        <h3>⚙️ 用户设定</h3>
         <label>你的人设</label>
         <input
           v-model="store.userPersona"
@@ -52,16 +54,20 @@
         <button class="btn-sidebar" @click="onNewSession" :disabled="store.loading">
           🆕 新建会话
         </button>
-        <div class="restore-row">
-          <input v-model="restoreId" type="text" placeholder="输入会话 ID..." />
-          <button @click="onRestore" :disabled="!restoreId || store.loading">🔄 恢复</button>
-        </div>
+      </section>
+
+      <!-- 历史存档 -->
+      <section class="sidebar-section">
+        <h3>💾 历史存档</h3>
+        <SessionList
+          ref="sessionListRef"
+          @restore="onRestore"
+          @delete="onDeleteSession"
+        />
       </section>
     </aside>
 
-    <!-- ============================================================ -->
     <!-- 主内容区 -->
-    <!-- ============================================================ -->
     <main class="main-content">
       <!-- 错误提示 -->
       <div v-if="store.error" class="error-banner">
@@ -90,8 +96,25 @@
       <ChatInput
         v-if="store.sessionId && (store.step === 'input')"
         :disabled="store.loading"
+        :initialText="chatHistoryText"
         @submit="onChatSubmit"
       />
+
+      <!-- 聊天记录回顾（非 input 步骤时显示只读历史） -->
+      <div v-if="store.sessionId && store.step !== 'input' && store.chatHistory.length > 0" class="history-section">
+        <h3>💬 聊天记录</h3>
+        <div class="history-messages">
+          <div
+            v-for="(m, i) in store.chatHistory"
+            :key="i"
+            class="history-msg"
+            :class="'msg-' + m.speaker"
+          >
+            <span class="msg-speaker">{{ m.speaker === 'me' ? '我' : '对方' }}</span>
+            <span class="msg-content">{{ m.content }}</span>
+          </div>
+        </div>
+      </div>
 
       <!-- 第二步：分析报告 -->
       <AnalysisReport
@@ -135,8 +158,8 @@
       <!-- 空状态引导 -->
       <div v-if="!store.sessionId && !store.loading" class="empty-state">
         <div class="empty-icon">💘</div>
-        <h2>欢迎使用 AI 约会助攻顾问</h2>
-        <p>在左侧边栏配置 API Key，然后点击「新建会话」开始。</p>
+        <h2>欢迎回来，{{ auth.username }}</h2>
+        <p>点击「新建会话」开始分析，或从左侧存档中恢复之前的会话。</p>
         <p class="empty-sub">分析 → 生成 → 审核 → 润色 → 模拟，五步帮你搞定每次回复。</p>
       </div>
     </main>
@@ -146,18 +169,32 @@
 <script setup>
 import { ref, computed } from 'vue'
 import { useSessionStore } from './stores/session'
+import { useAuthStore } from './stores/auth'
 import ChatInput from './components/ChatInput.vue'
 import AnalysisReport from './components/AnalysisReport.vue'
 import CandidateReview from './components/CandidateReview.vue'
 import FinalResult from './components/FinalResult.vue'
+import LoginForm from './components/LoginForm.vue'
+import SessionList from './components/SessionList.vue'
 
 const store = useSessionStore()
+const auth = useAuthStore()
 
 // ---- 本地状态 ----
-const apiKey = ref('')
-const restoreId = ref('')
 const showModifyEditor = ref(false)
 const modifyTargetIndex = ref(0)
+const sessionListRef = ref(null)
+
+// ---- 派生数据 ----
+
+/** 将 chatHistory 数组还原为文本（中文格式：对方：xxx / 我：xxx） */
+const chatHistoryText = computed(() => {
+  if (!store.chatHistory || store.chatHistory.length === 0) return ''
+  return store.chatHistory.map(m => {
+    const label = m.speaker === 'me' ? '我' : '对方'
+    return `${label}：${m.content}`
+  }).join('\n')
+})
 
 // ---- 加载文案 ----
 const loadingText = computed(() => {
@@ -167,29 +204,43 @@ const loadingText = computed(() => {
 
 // ---- 事件处理 ----
 
-function onApiKeyChange() {
-  // 将 API Key 传递给后端（通过 header 或 query）
-  // 简化方案：后端在每次请求时从环境变量读取
-  // 此处仅做前端记录
+function onLoggedIn() {
+  // 登录成功后刷新存档列表
+  sessionListRef.value?.refresh()
+}
+
+function onLogout() {
+  auth.logout()
+  store.resetState?.()
 }
 
 async function onNewSession() {
   showModifyEditor.value = false
   await store.newSession()
+  // 刷新存档列表
+  sessionListRef.value?.refresh()
 }
 
-async function onRestore() {
-  await store.restoreSession(restoreId.value)
-  restoreId.value = ''
+async function onRestore(sessionId) {
+  showModifyEditor.value = false
+  await store.restoreSession(sessionId)
+}
+
+async function onDeleteSession(sessionId) {
+  await store.removeSession(sessionId)
+  sessionListRef.value?.refresh()
 }
 
 async function onChatSubmit(messages) {
   store.chatHistory = messages
   await store.startAnalyze()
+  // 分析完成后刷新存档列表（标题会更新）
+  sessionListRef.value?.refresh()
 }
 
 async function onAccept(index) {
   await store.submitReview('accept', index, null)
+  sessionListRef.value?.refresh()
 }
 
 function onModifyClick(index) {
@@ -200,10 +251,12 @@ function onModifyClick(index) {
 async function onModifyConfirm(editedText) {
   showModifyEditor.value = false
   await store.submitReview('modify', modifyTargetIndex.value, editedText)
+  sessionListRef.value?.refresh()
 }
 
 async function onReject() {
   await store.submitReview('reject', 0, null)
+  sessionListRef.value?.refresh()
 }
 </script>
 
@@ -240,7 +293,15 @@ body {
 .sidebar-section input:focus, .sidebar-section select:focus {
   outline: none; border-color: #e91e63;
 }
-.help { font-size: 11px; color: #666; }
+.user-row {
+  display: flex; justify-content: space-between; align-items: center;
+  background: #16213e; padding: 8px 12px; border-radius: 8px; font-size: 14px;
+}
+.btn-logout {
+  background: transparent; border: 1px solid #888; color: #888;
+  padding: 4px 10px; border-radius: 6px; font-size: 12px; cursor: pointer;
+}
+.btn-logout:hover { border-color: #e91e63; color: #e91e63; }
 .session-id {
   background: #16213e; padding: 8px 12px; border-radius: 8px; font-size: 13px;
 }
@@ -252,13 +313,6 @@ body {
 }
 .btn-sidebar:hover { background: #c2185b; }
 .btn-sidebar:disabled { opacity: 0.5; cursor: not-allowed; }
-.restore-row { display: flex; gap: 8px; }
-.restore-row input { flex: 1; }
-.restore-row button {
-  padding: 8px 14px; border: 1px solid #e91e63; border-radius: 8px;
-  background: transparent; color: #e91e63; font-size: 13px; cursor: pointer;
-}
-.restore-row button:hover { background: rgba(233,30,99,0.1); }
 
 /* ---- 主内容区 ---- */
 .main-content {
@@ -316,6 +370,19 @@ body {
 }
 .btn-primary:hover { background: #c2185b; }
 .btn-primary:disabled { opacity: 0.5; cursor: not-allowed; }
+
+/* ---- 聊天记录回顾 ---- */
+.history-section {
+  margin-bottom: 24px; padding: 16px 20px;
+  background: #fff; border-radius: 12px; border: 1px solid #e5e7eb;
+}
+.history-section h3 { margin-bottom: 12px; font-size: 15px; color: #555; }
+.history-messages { display: flex; flex-direction: column; gap: 6px; }
+.history-msg { padding: 6px 10px; border-radius: 6px; font-size: 14px; }
+.msg-me { background: #fce7f3; text-align: right; }
+.msg-other { background: #f3f4f6; }
+.msg-speaker { font-weight: 600; font-size: 12px; color: #888; margin-right: 6px; }
+.msg-me .msg-speaker { margin-right: 0; margin-left: 6px; order: 2; }
 
 /* ---- 底部操作 ---- */
 .bottom-actions { text-align: center; margin-top: 32px; }
