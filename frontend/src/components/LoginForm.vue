@@ -3,7 +3,7 @@
   <div class="login-overlay">
     <div class="login-card">
       <div class="login-header">
-        <h1>💘 AI 约会助攻顾问</h1>
+        <h1>💬 AI 聊天顾问系统</h1>
         <p>登录后才能使用系统</p>
       </div>
 

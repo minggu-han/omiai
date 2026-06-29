@@ -1,4 +1,4 @@
-"""AI 约会助攻顾问 LangGraph 工作流的状态定义。"""
+"""AI 聊天顾问系统 LangGraph 工作流的状态定义。"""
 
 from typing import List, Optional, Literal
 from typing_extensions import TypedDict

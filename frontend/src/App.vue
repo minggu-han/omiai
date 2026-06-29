@@ -1,4 +1,4 @@
-<!-- AI 约会助攻顾问 —— 主应用组件 -->
+<!-- AI 聊天顾问系统 —— 主应用组件 -->
 <template>
   <!-- ============================================================ -->
   <!-- 未登录 → 登录/注册页 -->
@@ -12,7 +12,7 @@
     <!-- 侧边栏 -->
     <aside class="sidebar">
       <div class="sidebar-header">
-        <h1>💘 AI 约会助攻顾问</h1>
+        <h1>💬 AI 聊天顾问系统</h1>
         <p class="tagline">基于 LangGraph 多智能体协作系统</p>
       </div>
 
@@ -157,10 +157,10 @@
 
       <!-- 空状态引导 -->
       <div v-if="!store.sessionId && !store.loading" class="empty-state">
-        <div class="empty-icon">💘</div>
+        <div class="empty-icon">💬</div>
         <h2>欢迎回来，{{ auth.username }}</h2>
         <p>点击「新建会话」开始分析，或从左侧存档中恢复之前的会话。</p>
-        <p class="empty-sub">分析 → 生成 → 审核 → 润色 → 模拟，五步帮你搞定每次回复。</p>
+        <p class="empty-sub">分析 → 生成 → 审核 → 润色 → 模拟，五步完成每次回复。</p>
       </div>
     </main>
   </div>

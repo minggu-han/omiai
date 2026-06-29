@@ -1,4 +1,4 @@
-"""LangGraph 状态图定义 —— AI 约会助攻顾问。
+"""LangGraph 状态图定义 —— AI 聊天顾问系统。
 
 工作流：
     START → analyzer → generator → human_review [中断点]
@@ -69,7 +69,7 @@ def route_after_review(state: OverallState) -> str:
 # ---------------------------------------------------------------------------
 
 def build_graph(checkpointer: Optional[BaseCheckpointSaver] = None):
-    """构建并编译 AI 约会助攻顾问的 StateGraph。
+    """构建并编译 AI 聊天顾问系统的 StateGraph。
 
     参数
     ----------

@@ -1,4 +1,4 @@
-"""OpenAI LLM 客户端封装，为 AI 约会助攻顾问提供统一的大模型调用接口。"""
+"""OpenAI LLM 客户端封装，为 AI 聊天顾问系统提供统一的大模型调用接口。"""
 
 import json
 import os

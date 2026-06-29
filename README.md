@@ -1,8 +1,8 @@
-# 💘 AI 约会助攻顾问 (AI Dating Coach)
+# 💬 AI 聊天顾问系统
 
-基于 **LangGraph** 多智能体协作系统，帮助用户分析聊天语境、生成个性化回复，并通过**人工审核机制**确保回复符合用户真实人设。
+基于 **LangGraph** 多智能体协作系统，帮助用户分析聊天语境、生成个性化回复，并通过**人工审核机制**确保回复质量。
 
-> 分析 → 生成 → 审核 → 润色 → 模拟，五步搞定每次回复。
+> 分析 → 生成 → 审核 → 润色 → 模拟，五步完成每次回复。
 
 ## 🛠 技术栈
 
@@ -426,3 +426,390 @@ venv\Scripts\python test_api.py
 
 ● 搞定。现在在 PyCharm 里右键 main.py → Run 'main' 或者直接点绿色 ▶ 按钮就能启动了。
 ```
+
+
+
+## 使用案例
+
+### 1、新建会话
+
+```mark
+POST http://localhost:5173/api/session
+[Request]
+NA
+
+[Respose]
+{"session_id":"98bb23fa"}
+
+```
+
+
+
+### 2.1、开始分析
+
+```mark
+POST http://localhost:5173/api/analyze
+[Request]
+{"session_id":"98bb23fa","chat_history":[{"speaker":"other","content":"今天好累啊"},{"speaker":"me","content":"怎么了？工作太忙了吗"},{"speaker":"other","content":"是啊，老板又加需求"},{"speaker":"me","content":"哈哈，IT行业的日常"},{"speaker":"other","content":"你倒是挺理解的嘛"}],"user_persona":"活泼搞笑女","user_goal":"邀约见面"}
+
+[Respose]
+{
+    "session_id": "98bb23fa",
+    "state": {
+        "chat_history": [
+            {
+                "speaker": "other",
+                "content": "今天好累啊"
+            },
+            {
+                "speaker": "me",
+                "content": "怎么了？工作太忙了吗"
+            },
+            {
+                "speaker": "other",
+                "content": "是啊，老板又加需求"
+            },
+            {
+                "speaker": "me",
+                "content": "哈哈，IT行业的日常"
+            },
+            {
+                "speaker": "other",
+                "content": "你倒是挺理解的嘛"
+            }
+        ],
+        "user_persona": "活泼搞笑女",
+        "user_goal": "邀约见面",
+        "analysis_report": {
+            "emotion_score": 0.68,
+            "intent": "分享工作疲惫并寻求共情",
+            "risk_level": "低",
+            "key_insight": "对方虽然在抱怨工作，但最后一句带有轻松和认可意味，说明对你的回应不排斥。建议继续共情，可以顺着说“太懂了，需求一加就没完，你今天是不是被折腾惨了？”来延续话题。"
+        },
+        "candidates": [
+            {
+                "style": "幽默",
+                "reply": "懂了，今天你是被需求追杀的一天😂下班我请你回血？",
+                "strategy_explain": "用夸张比喻接住对方疲惫，再自然抛出见面邀约，轻松不突兀"
+            },
+            {
+                "style": "温暖",
+                "reply": "听着就累，今天辛苦啦。要不要出来吃点好吃的缓缓？",
+                "strategy_explain": "先共情认可对方的辛苦，再用吃饭作为温柔邀约，降低压力"
+            },
+            {
+                "style": "推拉",
+                "reply": "看来你今天战损不低，勉强允许你见我充个电😏",
+                "strategy_explain": "用轻微调侃和自信姿态制造互动感，把见面包装成有趣奖励"
+            }
+        ],
+        "human_decision": null,
+        "human_selected_index": null,
+        "human_modified_text": null,
+        "final_reply": null,
+        "simulation": null,
+        "retry_count": 0,
+        "error_message": null
+    },
+    "is_interrupted": true
+}
+```
+
+
+
+### 2.2、全部驳回，重新生成
+
+```mark
+POST http://localhost:5173/api/review
+[Request]
+{"session_id":"98bb23fa","decision":"reject","selected_index":0,"modified_text":null}
+
+[Respose]
+{
+    "session_id": "98bb23fa",
+    "state": {
+        "chat_history": [
+            {
+                "speaker": "other",
+                "content": "今天好累啊"
+            },
+            {
+                "speaker": "me",
+                "content": "怎么了？工作太忙了吗"
+            },
+            {
+                "speaker": "other",
+                "content": "是啊，老板又加需求"
+            },
+            {
+                "speaker": "me",
+                "content": "哈哈，IT行业的日常"
+            },
+            {
+                "speaker": "other",
+                "content": "你倒是挺理解的嘛"
+            }
+        ],
+        "user_persona": "活泼搞笑女",
+        "user_goal": "邀约见面",
+        "analysis_report": {
+            "emotion_score": 0.68,
+            "intent": "分享工作疲惫并寻求共情",
+            "risk_level": "低",
+            "key_insight": "对方虽然在抱怨工作，但最后一句带有轻松和认可意味，说明对你的回应不排斥。建议继续共情，可以顺着说“太懂了，需求一加就没完，你今天是不是被折腾惨了？”来延续话题。"
+        },
+        "candidates": [
+            {
+                "style": "幽默",
+                "reply": "听起来你今天被工作榨成甘蔗渣了😂要不要出来补点快乐糖分？",
+                "strategy_explain": "用夸张比喻接住对方疲惫，再自然抛出见面邀约，轻松不施压"
+            },
+            {
+                "style": "温暖",
+                "reply": "辛苦啦，感觉你今天真的被折腾到了。晚上有空的话，我请你喝点放松的？",
+                "strategy_explain": "先共情对方的累，再用温柔邀约提供陪伴和放松感"
+            },
+            {
+                "style": "推拉",
+                "reply": "你这状态适合被投喂一下，不过我只救值得救的人，今晚出来验收吗？",
+                "strategy_explain": "带一点俏皮挑战和神秘感，把邀约包装成有趣互动，制造吸引力"
+            }
+        ],
+        "human_decision": "reject",
+        "human_selected_index": 0,
+        "human_modified_text": null,
+        "final_reply": null,
+        "simulation": null,
+        "retry_count": 1,
+        "error_message": null
+    },
+    "is_interrupted": true
+}
+```
+
+
+
+### 2.2、再次全部驳回，重新生成
+
+```mark
+POST http://localhost:5173/api/review
+[Request]
+{"session_id":"98bb23fa","decision":"reject","selected_index":0,"modified_text":null}
+
+[Respose]
+{
+    "session_id": "98bb23fa",
+    "state": {
+        "chat_history": [
+            {
+                "speaker": "other",
+                "content": "今天好累啊"
+            },
+            {
+                "speaker": "me",
+                "content": "怎么了？工作太忙了吗"
+            },
+            {
+                "speaker": "other",
+                "content": "是啊，老板又加需求"
+            },
+            {
+                "speaker": "me",
+                "content": "哈哈，IT行业的日常"
+            },
+            {
+                "speaker": "other",
+                "content": "你倒是挺理解的嘛"
+            }
+        ],
+        "user_persona": "活泼搞笑女",
+        "user_goal": "邀约见面",
+        "analysis_report": {
+            "emotion_score": 0.68,
+            "intent": "分享工作疲惫并寻求共情",
+            "risk_level": "低",
+            "key_insight": "对方虽然在抱怨工作，但最后一句带有轻松和认可意味，说明对你的回应不排斥。建议继续共情，可以顺着说“太懂了，需求一加就没完，你今天是不是被折腾惨了？”来延续话题。"
+        },
+        "candidates": [
+            {
+                "style": "幽默",
+                "reply": "你这工作强度，建议下班立刻申请一顿饭疗愈，我可以当陪诊员😎",
+                "strategy_explain": "用夸张的“饭疗愈”制造轻松感，同时自然把话题引到见面吃饭。"
+            },
+            {
+                "style": "温暖",
+                "reply": "听着都累，今天辛苦啦。要不要找天出来吃点好的，给你回血？",
+                "strategy_explain": "先共情对方疲惫，再用照顾感提出邀约，让对方更容易接受。"
+            },
+            {
+                "style": "推拉",
+                "reply": "感觉你今天被工作拿捏了，不过我有个解压方案，见面再告诉你。",
+                "strategy_explain": "轻轻调侃对方状态，同时留下悬念，把好奇心和见面邀约结合起来。"
+            }
+        ],
+        "human_decision": "reject",
+        "human_selected_index": 0,
+        "human_modified_text": null,
+        "final_reply": null,
+        "simulation": null,
+        "retry_count": 2,
+        "error_message": null
+    },
+    "is_interrupted": true
+}
+```
+
+
+
+### 2.4、选一条修改好提交
+
+```mark
+POST http://localhost:5173/api/review
+[Request]
+{"session_id":"98bb23fa","decision":"modify","selected_index":1,"modified_text":"先诅咒下资本家一下。听着都累，今天辛苦啦。要不要找天出来吃点好的，给你回血？"}
+
+[Respose]
+{
+    "session_id": "98bb23fa",
+    "state": {
+        "chat_history": [
+            {
+                "speaker": "other",
+                "content": "今天好累啊"
+            },
+            {
+                "speaker": "me",
+                "content": "怎么了？工作太忙了吗"
+            },
+            {
+                "speaker": "other",
+                "content": "是啊，老板又加需求"
+            },
+            {
+                "speaker": "me",
+                "content": "哈哈，IT行业的日常"
+            },
+            {
+                "speaker": "other",
+                "content": "你倒是挺理解的嘛"
+            }
+        ],
+        "user_persona": "活泼搞笑女",
+        "user_goal": "邀约见面",
+        "analysis_report": {
+            "emotion_score": 0.68,
+            "intent": "分享工作疲惫并寻求共情",
+            "risk_level": "低",
+            "key_insight": "对方虽然在抱怨工作，但最后一句带有轻松和认可意味，说明对你的回应不排斥。建议继续共情，可以顺着说“太懂了，需求一加就没完，你今天是不是被折腾惨了？”来延续话题。"
+        },
+        "candidates": [
+            {
+                "style": "幽默",
+                "reply": "你这工作强度，建议下班立刻申请一顿饭疗愈，我可以当陪诊员😎",
+                "strategy_explain": "用夸张的“饭疗愈”制造轻松感，同时自然把话题引到见面吃饭。"
+            },
+            {
+                "style": "温暖",
+                "reply": "听着都累，今天辛苦啦。要不要找天出来吃点好的，给你回血？",
+                "strategy_explain": "先共情对方疲惫，再用照顾感提出邀约，让对方更容易接受。"
+            },
+            {
+                "style": "推拉",
+                "reply": "感觉你今天被工作拿捏了，不过我有个解压方案，见面再告诉你。",
+                "strategy_explain": "轻轻调侃对方状态，同时留下悬念，把好奇心和见面邀约结合起来。"
+            }
+        ],
+        "human_decision": "modify",
+        "human_selected_index": 1,
+        "human_modified_text": "先诅咒下资本家一下。听着都累，今天辛苦啦。要不要找天出来吃点好的，给你回血？",
+        "final_reply": "先浅浅诅咒一下资本家。听着都累，今天辛苦啦！要不要找天出来吃点好的，给你回血？",
+        "simulation": {
+            "best_case": "哈哈哈先替我狠狠诅咒一下！确实需要回血了，吃点好的可以安排～你有什么推荐吗？",
+            "normal_case": "哈哈谢谢，今天确实有点累。吃饭再说吧，最近有点忙。",
+            "worst_case": "资本家这个说法也太夸张了吧😂 而且我就是吐槽一下，倒也不用特意出来吃饭。",
+            "fallback_suggestion": "如果对方觉得你说得太夸张或对邀约有点压力，可以马上放轻语气：'哈哈我就是顺着你吐槽一下，没有那么严肃～吃饭也不急，就是觉得你最近辛苦，想找机会请你吃点好吃的。你先好好休息，改天再说也行。' 这样既解释了玩笑，也降低了邀约压力。"
+        },
+        "retry_count": 2,
+        "error_message": null
+    },
+    "is_interrupted": false
+}
+```
+
+
+
+### 3、查看历史详情
+
+```
+POST http://localhost:5173/api/state/98bb23fa
+[Request]
+NA
+
+[Respose]
+{
+    "session_id": "98bb23fa",
+    "state": {
+        "chat_history": [
+            {
+                "speaker": "other",
+                "content": "今天好累啊"
+            },
+            {
+                "speaker": "me",
+                "content": "怎么了？工作太忙了吗"
+            },
+            {
+                "speaker": "other",
+                "content": "是啊，老板又加需求"
+            },
+            {
+                "speaker": "me",
+                "content": "哈哈，IT行业的日常"
+            },
+            {
+                "speaker": "other",
+                "content": "你倒是挺理解的嘛"
+            }
+        ],
+        "user_persona": "活泼搞笑女",
+        "user_goal": "邀约见面",
+        "analysis_report": {
+            "emotion_score": 0.68,
+            "intent": "分享工作疲惫并寻求共情",
+            "risk_level": "低",
+            "key_insight": "对方虽然在抱怨工作，但最后一句带有轻松和认可意味，说明对你的回应不排斥。建议继续共情，可以顺着说“太懂了，需求一加就没完，你今天是不是被折腾惨了？”来延续话题。"
+        },
+        "candidates": [
+            {
+                "style": "幽默",
+                "reply": "你这工作强度，建议下班立刻申请一顿饭疗愈，我可以当陪诊员😎",
+                "strategy_explain": "用夸张的“饭疗愈”制造轻松感，同时自然把话题引到见面吃饭。"
+            },
+            {
+                "style": "温暖",
+                "reply": "听着都累，今天辛苦啦。要不要找天出来吃点好的，给你回血？",
+                "strategy_explain": "先共情对方疲惫，再用照顾感提出邀约，让对方更容易接受。"
+            },
+            {
+                "style": "推拉",
+                "reply": "感觉你今天被工作拿捏了，不过我有个解压方案，见面再告诉你。",
+                "strategy_explain": "轻轻调侃对方状态，同时留下悬念，把好奇心和见面邀约结合起来。"
+            }
+        ],
+        "human_decision": "modify",
+        "human_selected_index": 1,
+        "human_modified_text": "先诅咒下资本家一下。听着都累，今天辛苦啦。要不要找天出来吃点好的，给你回血？",
+        "final_reply": "先浅浅诅咒一下资本家。听着都累，今天辛苦啦！要不要找天出来吃点好的，给你回血？",
+        "simulation": {
+            "best_case": "哈哈哈先替我狠狠诅咒一下！确实需要回血了，吃点好的可以安排～你有什么推荐吗？",
+            "normal_case": "哈哈谢谢，今天确实有点累。吃饭再说吧，最近有点忙。",
+            "worst_case": "资本家这个说法也太夸张了吧😂 而且我就是吐槽一下，倒也不用特意出来吃饭。",
+            "fallback_suggestion": "如果对方觉得你说得太夸张或对邀约有点压力，可以马上放轻语气：'哈哈我就是顺着你吐槽一下，没有那么严肃～吃饭也不急，就是觉得你最近辛苦，想找机会请你吃点好吃的。你先好好休息，改天再说也行。' 这样既解释了玩笑，也降低了邀约压力。"
+        },
+        "retry_count": 2,
+        "error_message": null
+    },
+    "is_interrupted": false
+}
+```
+

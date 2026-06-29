@@ -26,6 +26,7 @@ def get_checkpointer() -> MemorySaver:
 
 def new_thread_id() -> str:
     """生成一个新的唯一线程 ID。"""
+    #取前8位作为新会话id
     return str(uuid.uuid4())[:8]
 
 

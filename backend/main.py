@@ -1,4 +1,4 @@
-"""FastAPI 应用 —— AI 约会助攻顾问后端服务。
+"""FastAPI 应用 —— AI 聊天顾问系统后端服务。
 
 启动方式：  uvicorn main:app --reload --port 8000
 """
@@ -81,7 +81,7 @@ async def lifespan(app: FastAPI):
 # ---------------------------------------------------------------------------
 
 app = FastAPI(
-    title="AI 约会助攻顾问 API",
+    title="AI 聊天顾问系统 API",
     description="基于 LangGraph 的多智能体协作系统后端",
     version="2.0.0",
     lifespan=lifespan,
